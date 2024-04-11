@@ -1,0 +1,76 @@
+import random
+
+def print_puzzle(puzzle):
+    for row in puzzle:
+        print(' '.join(map(str, row)))
+
+def generate_goal_state():
+    goal_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+    return goal_state
+
+def generate_random_state():
+    numbers = list(range(9))
+    random.shuffle(numbers)
+    state = [numbers[i:i + 3] for i in range(0, 9, 3)]
+    return state
+
+def get_blank_position(puzzle):
+    for i in range(3):
+        for j in range(3):
+            if puzzle[i][j] == 0:
+                return i, j
+
+def get_neighbors(puzzle):
+    neighbors = []
+    blank_i, blank_j = get_blank_position(puzzle)
+    
+    for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        new_i, new_j = blank_i + dx, blank_j + dy
+        
+        if 0 <= new_i < 3 and 0 <= new_j < 3:
+            new_puzzle = [list(row) for row in puzzle]
+            new_puzzle[blank_i][blank_j], new_puzzle[new_i][new_j] = new_puzzle[new_i][new_j], new_puzzle[blank_i][blank_j]
+            neighbors.append(new_puzzle)
+    
+    return neighbors
+
+def heuristic(puzzle, goal_state):
+    h = 0
+    for i in range(3):
+        for j in range(3):
+            if puzzle[i][j] != goal_state[i][j]:
+                h += 1
+    return h
+
+def hill_climbing(initial_state, goal_state, max_iterations):
+    current_state = initial_state
+    current_h = heuristic(current_state, goal_state)
+    
+    for _ in range(max_iterations):
+        neighbors = get_neighbors(current_state)
+        neighbors_h = [heuristic(neighbor, goal_state) for neighbor in neighbors]
+        best_neighbor = neighbors[neighbors_h.index(min(neighbors_h))]
+        best_neighbor_h = min(neighbors_h)
+        
+        if best_neighbor_h >= current_h:
+            break
+        
+        current_state = best_neighbor
+        current_h = best_neighbor_h
+    
+    return current_state
+
+if __name__ == "__main__":
+    goal_state = generate_goal_state()
+    initial_state = generate_random_state()
+    
+    print("Initial State:")
+    print_puzzle(initial_state)
+    
+    result = hill_climbing(initial_state, goal_state, max_iterations=1000)
+    
+    print("\nGoal State:")
+    print_puzzle(goal_state)
+    
+    print("\nSolution:")
+    print_puzzle(result)
